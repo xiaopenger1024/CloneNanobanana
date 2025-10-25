@@ -2,19 +2,39 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, Sparkles, Loader2, Download } from "lucide-react"
+import { Upload, Sparkles, Loader2, Download, LogIn } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
 
 export function Editor() {
+  const [user, setUser] = useState<User | null>(null)
   const [prompt, setPrompt] = useState("")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [generatedImages, setGeneratedImages] = useState<string[]>([])
   const [generatedText, setGeneratedText] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -31,6 +51,12 @@ export function Editor() {
   }
 
   const handleGenerate = async () => {
+    // Check if user is logged in
+    if (!user) {
+      setError("Please sign in to use the AI Editor. Click the 'Sign In with GitHub' button at the top of the page.")
+      return
+    }
+
     if (!selectedImage || !prompt) {
       setError("Please upload an image and enter a prompt")
       return
@@ -101,7 +127,10 @@ export function Editor() {
               {/* Image Upload */}
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Reference Image</label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <label
+                  htmlFor="image-upload"
+                  className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer block"
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -109,22 +138,20 @@ export function Editor() {
                     className="hidden"
                     id="image-upload"
                   />
-                  <label htmlFor="image-upload" className="cursor-pointer">
-                    {selectedImage ? (
-                      <img
-                        src={selectedImage || "/placeholder.svg"}
-                        alt="Uploaded"
-                        className="max-h-48 mx-auto rounded-lg"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Add Image</p>
-                        <p className="text-xs text-muted-foreground">Max 50MB</p>
-                      </div>
-                    )}
-                  </label>
-                </div>
+                  {selectedImage ? (
+                    <img
+                      src={selectedImage || "/placeholder.svg"}
+                      alt="Uploaded"
+                      className="max-h-48 mx-auto rounded-lg"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Add Image</p>
+                      <p className="text-xs text-muted-foreground">Max 50MB</p>
+                    </div>
+                  )}
+                </label>
               </div>
 
               {/* Main Prompt */}
@@ -156,6 +183,17 @@ export function Editor() {
                   </>
                 )}
               </Button>
+
+              {!user && (
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign in required - Click here to go to login
+                </Button>
+              )}
             </CardContent>
           </Card>
 
