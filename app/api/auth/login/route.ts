@@ -6,8 +6,17 @@ export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
   const origin = requestUrl.origin
 
+  // Get provider from request body (default to github for backward compatibility)
+  const body = await request.json()
+  const provider = body.provider || "github"
+
+  // Validate provider
+  if (!["github", "google"].includes(provider)) {
+    return NextResponse.json({ error: "Invalid provider" }, { status: 400 })
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "github",
+    provider: provider as "github" | "google",
     options: {
       redirectTo: `${origin}/api/auth/callback`,
     },
