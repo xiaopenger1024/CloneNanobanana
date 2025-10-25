@@ -6,11 +6,15 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, Sparkles } from "lucide-react"
+import { Upload, Sparkles, Loader2, Download } from "lucide-react"
 
 export function Editor() {
   const [prompt, setPrompt] = useState("")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [generatedImages, setGeneratedImages] = useState<string[]>([])
+  const [generatedText, setGeneratedText] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -18,9 +22,59 @@ export function Editor() {
       const reader = new FileReader()
       reader.onloadend = () => {
         setSelectedImage(reader.result as string)
+        setGeneratedImages([])
+        setGeneratedText(null)
+        setError(null)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleGenerate = async () => {
+    if (!selectedImage || !prompt) {
+      setError("Please upload an image and enter a prompt")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setGeneratedImages([])
+    setGeneratedText(null)
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: selectedImage,
+          prompt: prompt,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate")
+      }
+
+      setGeneratedImages(data.images || [])
+      setGeneratedText(data.text || null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate image")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDownload = (imageUrl: string, index: number) => {
+    const link = document.createElement("a")
+    link.href = imageUrl
+    link.download = `nano-banana-generated-${index + 1}.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -84,9 +138,23 @@ export function Editor() {
                 />
               </div>
 
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Now
+              <Button
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                size="lg"
+                onClick={handleGenerate}
+                disabled={isLoading || !selectedImage || !prompt}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Now
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -100,10 +168,57 @@ export function Editor() {
               </div>
               <p className="text-sm text-muted-foreground mb-4">Your ultra-fast AI creations appear here instantly</p>
 
-              <div className="border-2 border-dashed border-border rounded-lg p-12 flex flex-col items-center justify-center min-h-96">
-                <div className="text-6xl mb-4 opacity-20">🖼️</div>
-                <p className="text-lg font-medium mb-2">Ready for Instant generation</p>
-                <p className="text-sm text-muted-foreground text-center">Enter your prompt and unleash the power</p>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center min-h-96">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary" />
+                    <p className="text-lg font-medium mb-2">Generating your image...</p>
+                    <p className="text-sm text-muted-foreground text-center">Please wait while AI works its magic</p>
+                  </>
+                ) : error ? (
+                  <>
+                    <div className="text-6xl mb-4 opacity-20">⚠️</div>
+                    <p className="text-lg font-medium mb-2 text-destructive">Error</p>
+                    <p className="text-sm text-muted-foreground text-center">{error}</p>
+                  </>
+                ) : generatedImages.length > 0 ? (
+                  <div className="w-full space-y-4">
+                    {generatedImages.map((img, index) => {
+                      // Extract image URL from the object structure
+                      const imageUrl = typeof img === 'string' ? img : (img as any)?.image_url?.url || ''
+
+                      return (
+                        <div key={index} className="w-full relative group">
+                          <img
+                            src={imageUrl}
+                            alt={`Generated ${index + 1}`}
+                            className="w-full h-auto rounded-lg shadow-lg"
+                          />
+                          <Button
+                            onClick={() => handleDownload(imageUrl, index)}
+                            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                            size="sm"
+                            variant="secondary"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                        </div>
+                      )
+                    })}
+                    {generatedText && (
+                      <div className="bg-muted rounded-lg p-4 mt-4">
+                        <p className="text-sm whitespace-pre-wrap">{generatedText}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-6xl mb-4 opacity-20">🖼️</div>
+                    <p className="text-lg font-medium mb-2">Ready for Instant generation</p>
+                    <p className="text-sm text-muted-foreground text-center">Enter your prompt and unleash the power</p>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
