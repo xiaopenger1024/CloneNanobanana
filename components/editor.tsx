@@ -6,12 +6,22 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, Sparkles, Loader2, Download, LogIn } from "lucide-react"
+import { Upload, Sparkles, Loader2, Download, LogIn, Crown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 
+interface UsageInfo {
+  canGenerate: boolean
+  isAdmin: boolean
+  isPaid: boolean
+  generationCount: number
+  remainingGenerations: number
+  message: string
+}
+
 export function Editor() {
   const [user, setUser] = useState<User | null>(null)
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null)
   const [prompt, setPrompt] = useState("")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [generatedImages, setGeneratedImages] = useState<string[]>([])
@@ -36,6 +46,27 @@ export function Editor() {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
+  // 获取使用次数信息
+  useEffect(() => {
+    if (user) {
+      fetchUsageInfo()
+    } else {
+      setUsageInfo(null)
+    }
+  }, [user])
+
+  const fetchUsageInfo = async () => {
+    try {
+      const response = await fetch("/api/usage")
+      if (response.ok) {
+        const data = await response.json()
+        setUsageInfo(data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch usage info:", error)
+    }
+  }
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -53,7 +84,13 @@ export function Editor() {
   const handleGenerate = async () => {
     // Check if user is logged in
     if (!user) {
-      setError("Please sign in to use the AI Editor. Click the 'Sign In with GitHub' button at the top of the page.")
+      setError("Please sign in to use the AI Editor. Click the 'Sign In' button at the top of the page.")
+      return
+    }
+
+    // Check usage limits
+    if (usageInfo && !usageInfo.canGenerate) {
+      setError("You have exhausted your free trial. Please upgrade to a paid plan to continue using the AI Editor.")
       return
     }
 
@@ -87,6 +124,12 @@ export function Editor() {
 
       setGeneratedImages(data.images || [])
       setGeneratedText(data.text || null)
+
+      // 增加使用次数（成功生成后）
+      await fetch("/api/usage", { method: "POST" })
+
+      // 刷新使用次数信息
+      await fetchUsageInfo()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate image")
     } finally {
@@ -107,11 +150,30 @@ export function Editor() {
     <section id="editor" className="py-20">
       <div className="container">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">Try The AI Editor</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">AI Image Editor</h2>
           <p className="text-lg text-muted-foreground text-balance max-w-2xl mx-auto">
             Experience the power of nano-banana's natural language image editing. Transform any photo with simple text
             commands
           </p>
+          {user && usageInfo && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
+              {usageInfo.isAdmin ? (
+                <>
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-medium">Admin Account - Unlimited Access</span>
+                </>
+              ) : usageInfo.isPaid ? (
+                <>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Paid Account - Unlimited Generations</span>
+                </>
+              ) : (
+                <span className="text-sm font-medium">
+                  Free Trial: {usageInfo.remainingGenerations} generation{usageInfo.remainingGenerations !== 1 ? 's' : ''} remaining
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
@@ -169,7 +231,7 @@ export function Editor() {
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 size="lg"
                 onClick={handleGenerate}
-                disabled={isLoading || !selectedImage || !prompt}
+                disabled={isLoading || !selectedImage || !prompt || (usageInfo !== null && !usageInfo.canGenerate)}
               >
                 {isLoading ? (
                   <>
@@ -179,7 +241,7 @@ export function Editor() {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Now
+                    Generate Image
                   </>
                 )}
               </Button>
@@ -191,8 +253,23 @@ export function Editor() {
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
                   <LogIn className="w-4 h-4 mr-2" />
-                  Sign in required - Click here to go to login
+                  Sign in required - Click here to login
                 </Button>
+              )}
+
+              {user && usageInfo && !usageInfo.canGenerate && !usageInfo.isPaid && !usageInfo.isAdmin && (
+                <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
+                    Free Trial Exhausted
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                    You've used your 1 free generation. Upgrade to unlock unlimited AI image editing.
+                  </p>
+                  <Button className="w-full" size="sm">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Pro
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
