@@ -1,8 +1,64 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
+import { LogOut, Github } from "lucide-react"
 
 export function Header() {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
+
+  const handleGithubLogin = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+      })
+      const data = await response.json()
+
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      })
+      window.location.reload()
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -36,9 +92,22 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm">
-            Sign In
-          </Button>
+          {user ? (
+            <>
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user.user_metadata.user_name || user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleLogout} disabled={isLoading}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={handleGithubLogin} disabled={isLoading}>
+              <Github className="w-4 h-4 mr-2" />
+              {isLoading ? "Signing in..." : "Sign In with GitHub"}
+            </Button>
+          )}
           <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
             Launch Now
           </Button>
