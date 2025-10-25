@@ -61,9 +61,29 @@ export function Editor() {
       if (response.ok) {
         const data = await response.json()
         setUsageInfo(data)
+      } else {
+        console.error("Failed to fetch usage info:", response.status, response.statusText)
+        // 如果 API 失败，设置一个默认的限制状态
+        setUsageInfo({
+          canGenerate: false,
+          isAdmin: false,
+          isPaid: false,
+          generationCount: 0,
+          remainingGenerations: 0,
+          message: "Unable to verify usage status. Please contact support."
+        })
       }
     } catch (error) {
       console.error("Failed to fetch usage info:", error)
+      // 如果发生错误，设置一个默认的限制状态
+      setUsageInfo({
+        canGenerate: false,
+        isAdmin: false,
+        isPaid: false,
+        generationCount: 0,
+        remainingGenerations: 0,
+        message: "Unable to verify usage status. Please contact support."
+      })
     }
   }
 
