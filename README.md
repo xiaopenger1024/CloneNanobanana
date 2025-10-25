@@ -1,161 +1,161 @@
-# Nano Banana - AI Image Editor
+# Nano Banana - AI 图片编辑器
 
-A Next.js-powered landing page showcasing an AI image editor with Gemini 2.5 Flash Image integration.
+基于 Next.js 构建的 AI 图片编辑器展示页面，集成 Gemini 2.5 Flash Image 模型。
 
-## Features
+## 功能特性
 
-- 🍌 **AI Image Generation** - Transform images with natural language prompts using Gemini 2.5 Flash Image (Nano Banana)
-- 🔐 **GitHub Authentication** - Secure user login with Supabase and GitHub OAuth
-- 🎨 **Interactive Editor** - Upload reference images and describe your desired edits (login required)
-- 📥 **Image Download** - Save generated images directly to your device
-- ⚡ **Fast Performance** - Built with Next.js 16 and Turbopack
-- 🎯 **Modern UI** - Responsive design with shadcn/ui components and Tailwind CSS v4
+- 🍌 **AI 图片生成** - 使用 Gemini 2.5 Flash Image (Nano Banana) 通过自然语言提示词转换图片
+- 🔐 **GitHub 身份认证** - 使用 Supabase 和 GitHub OAuth 实现安全的用户登录
+- 🎨 **交互式编辑器** - 上传参考图片并描述您想要的编辑效果（需要登录）
+- 📥 **图片下载** - 直接将生成的图片保存到您的设备
+- ⚡ **高性能** - 基于 Next.js 16 和 Turbopack 构建
+- 🎯 **现代化 UI** - 使用 shadcn/ui 组件和 Tailwind CSS v4 实现响应式设计
 
-## Tech Stack
+## 技术栈
 
-- **Framework**: Next.js 16 (App Router)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS v4, shadcn/ui (New York style)
-- **Authentication**: Supabase with GitHub OAuth
-- **AI Model**: Google Gemini 2.5 Flash Image via OpenRouter
-- **Components**: 40+ Radix UI-based components
-- **Package Manager**: pnpm
+- **框架**: Next.js 16 (App Router)
+- **UI 库**: React 19
+- **样式**: Tailwind CSS v4, shadcn/ui (New York 风格)
+- **身份认证**: Supabase with GitHub OAuth
+- **AI 模型**: Google Gemini 2.5 Flash Image (通过 OpenRouter)
+- **组件**: 40+ 基于 Radix UI 的组件
+- **包管理器**: pnpm
 
-## Getting Started
+## 快速开始
 
-### Prerequisites
+### 前置要求
 
 - Node.js 18+
 - pnpm
 
-### Installation
+### 安装步骤
 
-1. Clone the repository:
+1. 克隆仓库：
 ```bash
 git clone https://github.com/xiaopenger1024/CloneNanobanana.git
 cd CloneNanobanana
 ```
 
-2. Install dependencies:
+2. 安装依赖：
 ```bash
 pnpm install
 ```
 
-3. Create environment file:
+3. 创建环境变量文件：
 ```bash
-# Create .env.local file with required environment variables
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# 创建 .env.local 文件并添加以下环境变量
+OPENROUTER_API_KEY=你的_openrouter_api_密钥
+NEXT_PUBLIC_SUPABASE_URL=你的_supabase_项目_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=你的_supabase_匿名_密钥
 ```
 
-See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed Supabase configuration instructions.
+详细的 Supabase 配置说明请参考 [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)。
 
-4. Start development server:
+4. 启动开发服务器：
 ```bash
 pnpm dev
 ```
 
-Visit `http://localhost:3000` to see the application.
+访问 `http://localhost:3000` 查看应用。
 
-### Troubleshooting
+### 故障排除
 
-If you encounter port conflicts or lock file issues:
+如果遇到端口冲突或锁定文件问题：
 
 ```bash
-# Clean restart
+# 清理重启
 rmdir /s /q .next  # Windows
-# or
+# 或
 rm -rf .next       # macOS/Linux
 
 pnpm dev
 ```
 
-## Available Scripts
+## 可用脚本
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build production bundle
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
+- `pnpm dev` - 启动开发服务器
+- `pnpm build` - 构建生产版本
+- `pnpm start` - 启动生产服务器
+- `pnpm lint` - 运行 ESLint
 
-## Project Structure
+## 项目结构
 
 ```
 ├── app/
 │   ├── api/
-│   │   ├── auth/           # Authentication API routes (login, callback, logout)
-│   │   └── generate/       # AI image generation API route
-│   ├── layout.tsx          # Root layout with metadata
-│   ├── page.tsx            # Main landing page
-│   └── globals.css         # Global styles and CSS variables
+│   │   ├── auth/           # 身份认证 API 路由 (登录、回调、登出)
+│   │   └── generate/       # AI 图片生成 API 路由
+│   ├── layout.tsx          # 根布局和元数据
+│   ├── page.tsx            # 主落地页
+│   └── globals.css         # 全局样式和 CSS 变量
 ├── components/
-│   ├── editor.tsx          # AI editor component with auth protection
-│   ├── header.tsx          # Header with GitHub login
-│   ├── hero.tsx            # Hero section
-│   ├── features.tsx        # Features showcase
-│   └── ui/                 # shadcn/ui components
+│   ├── editor.tsx          # AI 编辑器组件（带认证保护）
+│   ├── header.tsx          # 页头（含 GitHub 登录）
+│   ├── hero.tsx            # 首屏区域
+│   ├── features.tsx        # 功能展示
+│   └── ui/                 # shadcn/ui 组件
 ├── lib/
-│   ├── supabase/           # Supabase client utilities
-│   └── utils.ts            # Utility functions
-├── hooks/                  # Custom React hooks
-└── .env.local              # Environment variables (not committed)
+│   ├── supabase/           # Supabase 客户端工具
+│   └── utils.ts            # 工具函数
+├── hooks/                  # 自定义 React Hooks
+└── .env.local              # 环境变量（不提交到版本控制）
 ```
 
-## API Integration
+## API 集成
 
-### AI Image Generation
+### AI 图片生成
 
-This project uses the Gemini 2.5 Flash Image model through OpenRouter API:
+本项目通过 OpenRouter API 使用 Gemini 2.5 Flash Image 模型：
 
-- **Model**: `google/gemini-2.5-flash-image`
-- **Endpoint**: `https://openrouter.ai/api/v1`
-- **Features**: Image understanding, editing, and generation
+- **模型**: `google/gemini-2.5-flash-image`
+- **端点**: `https://openrouter.ai/api/v1`
+- **功能**: 图片理解、编辑和生成
 
-Get your API key at [OpenRouter](https://openrouter.ai/).
+在 [OpenRouter](https://openrouter.ai/) 获取您的 API 密钥。
 
-### Authentication
+### 身份认证
 
-User authentication is handled by Supabase with GitHub as the OAuth provider:
+用户认证通过 Supabase 和 GitHub OAuth 提供：
 
-- **Provider**: GitHub OAuth
-- **Session Management**: Cookie-based with SSR support
-- **Protected Routes**: AI image generation requires authentication
+- **提供商**: GitHub OAuth
+- **会话管理**: 基于 Cookie 的 SSR 支持
+- **受保护路由**: AI 图片生成功能需要身份认证
 
-See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for setup instructions.
+配置说明请参考 [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)。
 
-## Deployment
+## 部署
 
-This project can be deployed to Vercel, Netlify, or any platform supporting Next.js:
+本项目可以部署到 Vercel、Netlify 或任何支持 Next.js 的平台：
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-### Environment Variables for Deployment
+### 部署环境变量
 
-Make sure to add these environment variables in your deployment platform (e.g., Vercel):
+确保在部署平台（如 Vercel）中添加以下环境变量：
 
-- `OPENROUTER_API_KEY` - Your OpenRouter API key
-- `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `OPENROUTER_API_KEY` - 您的 OpenRouter API 密钥
+- `NEXT_PUBLIC_SUPABASE_URL` - 您的 Supabase 项目 URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - 您的 Supabase 匿名密钥
 
-For Vercel deployment, simply connect your repository - the platform will auto-detect Next.js configuration.
+对于 Vercel 部署，只需连接您的仓库，平台会自动检测 Next.js 配置。
 
-## Important Notes
+## 重要说明
 
-- **Authentication Required**: Users must sign in with GitHub to use the AI image generation feature
-- **Environment Variables**: Never commit `.env.local` files to version control
-- **API Costs**: Gemini 2.5 Flash Image costs $0.039 per generated image (1290 output tokens)
-- **TypeScript**: Build errors are ignored in production (`ignoreBuildErrors: true`)
-- **Images**: Unoptimized to reduce build complexity
+- **需要身份认证**: 用户必须使用 GitHub 登录才能使用 AI 图片生成功能
+- **环境变量**: 永远不要将 `.env.local` 文件提交到版本控制
+- **API 费用**: Gemini 2.5 Flash Image 每张生成图片费用为 $0.039（1290 输出 tokens）
+- **TypeScript**: 生产环境中忽略构建错误（`ignoreBuildErrors: true`）
+- **图片**: 未优化以降低构建复杂度
 
-## License
+## 许可证
 
-This is a demo project created for showcasing AI image editing capabilities.
+这是一个用于展示 AI 图片编辑能力的演示项目。
 
-## Acknowledgments
+## 致谢
 
-- UI components by [shadcn/ui](https://ui.shadcn.com/)
-- AI model by [Google Gemini](https://ai.google.dev/)
-- API access via [OpenRouter](https://openrouter.ai/)
+- UI 组件来自 [shadcn/ui](https://ui.shadcn.com/)
+- AI 模型来自 [Google Gemini](https://ai.google.dev/)
+- API 访问通过 [OpenRouter](https://openrouter.ai/)
