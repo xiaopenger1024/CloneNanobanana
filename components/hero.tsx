@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -37,11 +39,20 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8">
+            <Button
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8"
+              onClick={() => document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Start Editing
               <span className="ml-2">✨</span>
             </Button>
-            <Button size="lg" variant="outline" className="text-base px-8 bg-transparent">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-base px-8 bg-transparent"
+              onClick={() => document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               View Examples
             </Button>
           </div>
