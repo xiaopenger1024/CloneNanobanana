@@ -82,13 +82,13 @@ export function Header() {
 
         <nav className="hidden md:flex items-center gap-6">
           <a
-            href="#editor"
+            href="/#editor"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Image Editor
           </a>
           <a
-            href="#showcase"
+            href="/#showcase"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Showcase
@@ -100,12 +100,12 @@ export function Header() {
             Pricing
           </a>
           <a
-            href="#testimonials"
+            href="/#testimonials"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Reviews
           </a>
-          <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             FAQ
           </a>
         </nav>
