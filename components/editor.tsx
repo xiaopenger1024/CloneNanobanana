@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,6 +21,7 @@ interface UsageInfo {
 }
 
 export function Editor() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null)
   const [prompt, setPrompt] = useState("")
@@ -285,7 +287,11 @@ export function Editor() {
                   <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
                     You've used your 1 free generation. Upgrade to unlock unlimited AI image editing.
                   </p>
-                  <Button className="w-full" size="sm">
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={() => router.push('/pricing')}
+                  >
                     <Crown className="w-4 h-4 mr-2" />
                     Upgrade to Pro
                   </Button>
