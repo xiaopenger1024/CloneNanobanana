@@ -94,6 +94,12 @@ export function Header() {
             Showcase
           </a>
           <a
+            href="/pricing"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Pricing
+          </a>
+          <a
             href="#testimonials"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >

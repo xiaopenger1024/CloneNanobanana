@@ -9,6 +9,7 @@
 - 🎨 **交互式编辑器** - 上传参考图片并描述您想要的编辑效果（需要登录）
 - 📥 **图片下载** - 直接将生成的图片保存到您的设备
 - 🎯 **使用限制系统** - 免费用户 1 次试用，付费用户无限次，管理员白名单
+- 💳 **订阅付费** - 集成 Creem 支付系统，支持多种订阅套餐
 - ⚡ **高性能** - 基于 Next.js 16 和 Turbopack 构建
 - 🎯 **现代化 UI** - 使用 shadcn/ui 组件和 Tailwind CSS v4 实现响应式设计
 
@@ -18,6 +19,7 @@
 - **UI 库**: React 19
 - **样式**: Tailwind CSS v4, shadcn/ui (New York 风格)
 - **身份认证**: Supabase with GitHub & Google OAuth
+- **支付系统**: Creem Payment Gateway
 - **AI 模型**: Google Gemini 2.5 Flash Image (通过 OpenRouter)
 - **组件**: 40+ 基于 Radix UI 的组件
 - **包管理器**: pnpm
@@ -48,10 +50,17 @@ pnpm install
 OPENROUTER_API_KEY=你的_openrouter_api_密钥
 NEXT_PUBLIC_SUPABASE_URL=你的_supabase_项目_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=你的_supabase_匿名_密钥
+SUPABASE_SERVICE_ROLE_KEY=你的_supabase_服务角色_密钥
 ADMIN_EMAILS=admin@example.com,admin2@example.com  # 可选：管理员邮箱列表（逗号分隔）
+
+# Creem 支付配置（可选，如需付费功能）
+CREEM_API_KEY=你的_creem_api_密钥
+CREEM_PRODUCT_ID=你的_creem_产品_id
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 详细的 Supabase 配置说明请参考 [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)。
+详细的 Creem 支付配置请参考 [CREEM_SETUP.md](./CREEM_SETUP.md)。
 
 4. 配置数据库：
 ```bash
@@ -94,8 +103,13 @@ pnpm dev
 ├── app/
 │   ├── api/
 │   │   ├── auth/           # 身份认证 API 路由 (登录、回调、登出)
+│   │   ├── checkout/       # Creem 支付结账 API
+│   │   ├── webhooks/       # Creem 支付 webhook 处理
 │   │   ├── generate/       # AI 图片生成 API 路由
 │   │   └── usage/          # 使用限制 API 路由（检查和增加计数）
+│   ├── payment/
+│   │   └── success/        # 支付成功页面
+│   ├── pricing/            # 定价页面
 │   ├── layout.tsx          # 根布局和元数据
 │   ├── page.tsx            # 主落地页
 │   └── globals.css         # 全局样式和 CSS 变量
@@ -166,6 +180,26 @@ ORDER BY created_at DESC;
 
 详细说明请参考 [USAGE_LIMITS.md](./USAGE_LIMITS.md)。
 
+### Creem 支付系统
+
+本项目集成了 Creem 支付网关，支持订阅付费：
+
+- **订阅套餐**: Basic ($12/月)、Pro ($19.50/月)、Max ($80/月)
+- **支付方式**: 信用卡、借记卡等多种支付方式
+- **自动续费**: 支持月付和年付自动续费
+- **Webhook 集成**: 自动处理支付成功、取消等事件
+
+#### 配置 Creem 支付
+
+1. 在 [Creem Dashboard](https://creem.io) 创建账号
+2. 获取 API Key 和 Product ID
+3. 配置环境变量（详见 [CREEM_SETUP.md](./CREEM_SETUP.md)）
+4. 设置 Webhook URL: `https://yourdomain.com/api/webhooks`
+
+支付成功后，系统会自动将用户标记为付费用户（`is_paid = true`）。
+
+详细配置说明请参考 [CREEM_SETUP.md](./CREEM_SETUP.md)。
+
 ## 部署
 
 本项目可以部署到 Vercel、Netlify 或任何支持 Next.js 的平台：
@@ -179,10 +213,17 @@ pnpm start
 
 确保在部署平台（如 Vercel）中添加以下环境变量：
 
+**必需环境变量：**
 - `OPENROUTER_API_KEY` - 您的 OpenRouter API 密钥
 - `NEXT_PUBLIC_SUPABASE_URL` - 您的 Supabase 项目 URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - 您的 Supabase 匿名密钥
-- `ADMIN_EMAILS` - （可选）管理员邮箱列表，用逗号分隔
+- `SUPABASE_SERVICE_ROLE_KEY` - 您的 Supabase 服务角色密钥
+
+**可选环境变量：**
+- `ADMIN_EMAILS` - 管理员邮箱列表，用逗号分隔
+- `CREEM_API_KEY` - Creem API 密钥（如需支付功能）
+- `CREEM_PRODUCT_ID` - Creem 产品 ID（如需支付功能）
+- `NEXT_PUBLIC_APP_URL` - 应用 URL（生产环境）
 
 对于 Vercel 部署，只需连接您的仓库，平台会自动检测 Next.js 配置。
 
@@ -202,6 +243,7 @@ pnpm start
 - [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Supabase OAuth 配置详细说明
 - [DATABASE_SETUP.md](./DATABASE_SETUP.md) - 数据库表结构和 SQL 脚本
 - [USAGE_LIMITS.md](./USAGE_LIMITS.md) - 使用限制功能详细说明
+- [CREEM_SETUP.md](./CREEM_SETUP.md) - Creem 支付集成配置指南
 - [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) - Vercel 部署故障排除指南
 
 ## 许可证
