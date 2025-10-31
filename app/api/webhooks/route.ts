@@ -7,6 +7,13 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Credits allocation based on plan
+const PLAN_CREDITS = {
+  Basic: 1800,   // 900 images (2 credits = 1 image)
+  Pro: 9600,     // 4,800 images
+  Max: 55200,    // 27,600 images
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -45,12 +52,23 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(body: any) {
   const metadata = body.data?.metadata || body.metadata
+  const data = body.data || body
+
   const userId = metadata?.user_id
   const userEmail = metadata?.user_email
-  const planName = metadata?.plan_name
-  const status = body.data?.status || body.status
+  const planName = metadata?.plan_name || 'Basic'
+  const billingType = metadata?.billing_type || 'monthly'
+  const status = data?.status || body.status
 
-  console.log("Checkout completed:", { userId, userEmail, planName, status })
+  // Extract Creem IDs
+  const orderId = data?.order_id || data?.id
+  const customerId = data?.customer_id
+  const subscriptionId = data?.subscription_id
+
+  console.log("Checkout completed:", {
+    userId, userEmail, planName, billingType, status,
+    orderId, customerId, subscriptionId
+  })
 
   if (!userId || !userEmail) {
     console.error("Missing user information in webhook metadata")
@@ -63,59 +81,71 @@ async function handleCheckoutCompleted(body: any) {
     return
   }
 
-  // Update user_usage table to mark user as paid
-  const { error } = await supabaseAdmin
-    .from("user_usage")
-    .upsert(
-      {
-        user_id: userId,
-        email: userEmail,
-        is_paid: true,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "user_id",
-      }
-    )
+  // Get credits amount for the plan
+  const totalCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+
+  // Call allocate_credits function to update user with credits
+  const { error } = await supabaseAdmin.rpc('allocate_credits', {
+    p_user_id: userId,
+    p_email: userEmail,
+    p_plan_name: planName,
+    p_billing_type: billingType,
+    p_total_credits: totalCredits,
+    p_subscription_id: subscriptionId,
+    p_customer_id: customerId,
+    p_order_id: orderId,
+  })
 
   if (error) {
-    console.error("Error updating user_usage:", error)
+    console.error("Error allocating credits:", error)
   } else {
-    console.log("Successfully updated user as paid:", userEmail)
+    console.log(`Successfully allocated ${totalCredits} credits to ${userEmail} (${planName} - ${billingType})`)
   }
 }
 
 async function handleSubscriptionActive(body: any) {
   const metadata = body.data?.metadata || body.metadata
+  const data = body.data || body
+
   const userId = metadata?.user_id
   const userEmail = metadata?.user_email
+  const planName = metadata?.plan_name || 'Basic'
+  const billingType = metadata?.billing_type || 'monthly'
 
-  console.log("Subscription active:", { userId, userEmail })
+  // Extract Creem IDs
+  const subscriptionId = data?.subscription_id || data?.id
+  const customerId = data?.customer_id
+  const orderId = data?.order_id
+
+  console.log("Subscription active:", {
+    userId, userEmail, planName, billingType,
+    subscriptionId, customerId
+  })
 
   if (!userId || !userEmail) {
     console.error("Missing user information in webhook metadata")
     return
   }
 
-  // Update user_usage table to mark user as paid
-  const { error } = await supabaseAdmin
-    .from("user_usage")
-    .upsert(
-      {
-        user_id: userId,
-        email: userEmail,
-        is_paid: true,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "user_id",
-      }
-    )
+  // Get credits amount for the plan
+  const totalCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+
+  // Call allocate_credits function
+  const { error } = await supabaseAdmin.rpc('allocate_credits', {
+    p_user_id: userId,
+    p_email: userEmail,
+    p_plan_name: planName,
+    p_billing_type: billingType,
+    p_total_credits: totalCredits,
+    p_subscription_id: subscriptionId,
+    p_customer_id: customerId,
+    p_order_id: orderId,
+  })
 
   if (error) {
-    console.error("Error updating user_usage:", error)
+    console.error("Error allocating credits:", error)
   } else {
-    console.log("Successfully activated subscription:", userEmail)
+    console.log(`Successfully activated subscription with ${totalCredits} credits: ${userEmail}`)
   }
 }
 
@@ -131,11 +161,14 @@ async function handleSubscriptionCanceled(body: any) {
     return
   }
 
-  // Update user_usage table to remove paid status
+  // Update user_usage table to remove paid status and clear credits
   const { error } = await supabaseAdmin
     .from("user_usage")
     .update({
       is_paid: false,
+      remaining_credits: 0,
+      plan_name: null,
+      subscription_id: null,
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId)

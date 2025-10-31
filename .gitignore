@@ -26,5 +26,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code configuration
+# Claude Code configuration (local only)
 CLAUDE.md
+
+# Troubleshooting archive (local debugging documents)
+docs/troubleshooting-archive/

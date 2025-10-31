@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+// Credits required per image generation
+const CREDITS_PER_IMAGE = 2
+
+// Detect if we're in test mode based on Creem API key
+const isTestMode = process.env.CREEM_API_KEY?.startsWith('creem_test_') || false
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // 获取当前用户
+    // Get current user
     const {
       data: { user },
       error: authError,
@@ -20,7 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User email not found" }, { status: 400 })
     }
 
-    // 检查是否是管理员
+    // Check if user is admin
     const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((email) => email.trim()) || []
     const isAdmin = adminEmails.includes(userEmail)
 
@@ -29,13 +35,15 @@ export async function GET(request: NextRequest) {
         canGenerate: true,
         isAdmin: true,
         isPaid: true,
-        generationCount: 0,
-        remainingGenerations: -1, // -1 表示无限
+        remainingCredits: -1, // -1 = unlimited
+        totalCredits: -1,
+        planName: "Admin",
         message: "Admin account - unlimited generations",
+        testMode: isTestMode,
       })
     }
 
-    // 查询用户使用记录
+    // Query user usage record
     const { data: usage, error: usageError } = await supabase
       .from("user_usage")
       .select("*")
@@ -43,12 +51,11 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (usageError && usageError.code !== "PGRST116") {
-      // PGRST116 是"未找到记录"错误
       console.error("Error fetching user usage:", usageError)
       return NextResponse.json({ error: "Failed to fetch usage data" }, { status: 500 })
     }
 
-    // 如果没有记录，创建新记录
+    // If no record, create new one (free trial: 2 credits = 1 image)
     if (!usage) {
       const { data: newUsage, error: insertError } = await supabase
         .from("user_usage")
@@ -57,6 +64,9 @@ export async function GET(request: NextRequest) {
           email: userEmail,
           generation_count: 0,
           is_paid: false,
+          remaining_credits: 2, // Free trial: 1 image
+          total_credits: 2,
+          plan_name: "Free Trial",
         })
         .select()
         .single()
@@ -70,35 +80,32 @@ export async function GET(request: NextRequest) {
         canGenerate: true,
         isAdmin: false,
         isPaid: false,
-        generationCount: 0,
-        remainingGenerations: 1,
-        message: "First generation available",
+        remainingCredits: 2,
+        totalCredits: 2,
+        planName: "Free Trial",
+        message: "Free trial: 1 generation available",
+        testMode: isTestMode,
       })
     }
 
-    // 检查是否已付费
-    if (usage.is_paid) {
-      return NextResponse.json({
-        canGenerate: true,
-        isAdmin: false,
-        isPaid: true,
-        generationCount: usage.generation_count,
-        remainingGenerations: -1, // -1 表示无限
-        message: "Paid account - unlimited generations",
-      })
-    }
-
-    // 免费用户只能使用 1 次
-    const canGenerate = usage.generation_count < 1
-    const remainingGenerations = Math.max(0, 1 - usage.generation_count)
+    // Return user credits info
+    const remainingCredits = usage.remaining_credits || 0
+    const totalCredits = usage.total_credits || 0
+    const canGenerate = remainingCredits >= CREDITS_PER_IMAGE
 
     return NextResponse.json({
       canGenerate,
       isAdmin: false,
-      isPaid: false,
-      generationCount: usage.generation_count,
-      remainingGenerations,
-      message: canGenerate ? `${remainingGenerations} generation(s) remaining` : "Free trial exhausted. Please upgrade to continue.",
+      isPaid: usage.is_paid || false,
+      remainingCredits,
+      totalCredits,
+      planName: usage.plan_name || "Free Trial",
+      billingType: usage.billing_type,
+      subscriptionEndDate: usage.subscription_end_date,
+      testMode: isTestMode,
+      message: canGenerate
+        ? `${Math.floor(remainingCredits / CREDITS_PER_IMAGE)} generation(s) remaining`
+        : "Insufficient credits. Please upgrade to continue.",
     })
   } catch (error) {
     console.error("Error in usage check:", error)
@@ -107,10 +114,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("🔥 POST /api/usage called - NEW CODE LOADED 🔥")
   try {
     const supabase = await createClient()
 
-    // 获取当前用户
+    // Get current user
     const {
       data: { user },
       error: authError,
@@ -125,38 +133,84 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User email not found" }, { status: 400 })
     }
 
-    // 检查是否是管理员（管理员不需要增加计数）
+    // Check if user is admin (admin doesn't deduct credits)
     const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((email) => email.trim()) || []
     const isAdmin = adminEmails.includes(userEmail)
 
     if (isAdmin) {
-      return NextResponse.json({ success: true, message: "Admin account - no count increment" })
+      return NextResponse.json({
+        success: true,
+        message: "Admin account - no credit deduction",
+        remainingCredits: -1,
+      })
     }
 
-    // 增加使用次数
-    const { error: updateError } = await supabase.rpc("increment_generation_count", {
+    // Deduct credits using the database function
+    const { data, error: deductError } = await supabase.rpc("deduct_credits", {
       p_user_id: user.id,
+      p_credits: CREDITS_PER_IMAGE,
     })
 
-    if (updateError) {
-      // 如果函数不存在，使用传统方式更新
-      const { data: currentUsage } = await supabase
-        .from("user_usage")
-        .select("generation_count")
-        .eq("user_id", user.id)
-        .single()
-
-      if (currentUsage) {
-        await supabase
-          .from("user_usage")
-          .update({ generation_count: currentUsage.generation_count + 1 })
-          .eq("user_id", user.id)
-      }
+    if (deductError) {
+      console.error("Error deducting credits:", deductError)
+      return NextResponse.json({ error: "Failed to deduct credits" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, message: "Generation count incremented" })
+    // 添加调试日志
+    console.log("=== Deduct Credits Debug ===")
+    console.log("Raw data:", JSON.stringify(data))
+    console.log("Data type:", typeof data)
+    console.log("Is array:", Array.isArray(data))
+    console.log("===========================")
+
+    // Also increment generation_count for backward compatibility
+    await supabase.rpc("increment_generation_count", {
+      p_user_id: user.id,
+    }).catch(() => {
+      // Ignore error if function doesn't exist
+    })
+
+    // 尝试多种可能的解析方式
+    let result: any = null
+    let remainingCredits: number = 0
+
+    if (Array.isArray(data) && data.length > 0) {
+      // 如果是数组，取第一个元素
+      result = data[0]
+    } else if (data && typeof data === 'object') {
+      // 如果是对象，直接使用
+      result = data
+    }
+
+    console.log("=== Result Debug ===")
+    console.log("Parsed result:", JSON.stringify(result))
+    console.log("result.success:", result?.success)
+    console.log("result.remaining:", result?.remaining)
+    console.log("====================")
+
+    // 尝试获取 remaining credits
+    if (result) {
+      // 尝试多种可能的字段名
+      remainingCredits = result.remaining ?? result.remaining_credits ?? result.remainingCredits ?? 0
+    }
+
+    console.log("Final remainingCredits:", remainingCredits)
+
+    if (!result || result.success === false) {
+      return NextResponse.json({
+        success: false,
+        error: "Failed to deduct credits",
+        remainingCredits: 0,
+      }, { status: 400 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Deducted ${CREDITS_PER_IMAGE} credits`,
+      remainingCredits: remainingCredits,
+    })
   } catch (error) {
-    console.error("Error incrementing usage:", error)
+    console.error("Error deducting credits:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -177,7 +231,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { is_paid, order_id, checkout_id } = body
+    const { is_paid, order_id, checkout_id, customer_id, subscription_id } = body
 
     if (typeof is_paid !== 'boolean') {
       return NextResponse.json({ error: "Invalid is_paid value" }, { status: 400 })
@@ -189,26 +243,29 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update or insert user payment status
+    const updateData: any = {
+      user_id: user.id,
+      email: userEmail,
+      is_paid: is_paid,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (customer_id) updateData.customer_id = customer_id
+    if (subscription_id) updateData.subscription_id = subscription_id
+    if (order_id) updateData.order_id = order_id
+
     const { error: upsertError } = await supabase
       .from("user_usage")
-      .upsert(
-        {
-          user_id: user.id,
-          email: userEmail,
-          is_paid: is_paid,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id",
-        }
-      )
+      .upsert(updateData, {
+        onConflict: "user_id",
+      })
 
     if (upsertError) {
       console.error("Error updating payment status:", upsertError)
       return NextResponse.json({ error: "Failed to update payment status" }, { status: 500 })
     }
 
-    console.log(`Payment status updated for user ${userEmail}: is_paid=${is_paid}, order_id=${order_id}, checkout_id=${checkout_id}`)
+    console.log(`Payment status updated for user ${userEmail}: is_paid=${is_paid}, order_id=${order_id}`)
 
     return NextResponse.json({
       success: true,

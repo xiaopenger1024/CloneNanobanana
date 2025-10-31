@@ -15,9 +15,11 @@ interface UsageInfo {
   canGenerate: boolean
   isAdmin: boolean
   isPaid: boolean
-  generationCount: number
-  remainingGenerations: number
+  remainingCredits: number
+  totalCredits: number
+  planName: string
   message: string
+  testMode?: boolean
 }
 
 export function Editor() {
@@ -70,8 +72,9 @@ export function Editor() {
           canGenerate: false,
           isAdmin: false,
           isPaid: false,
-          generationCount: 0,
-          remainingGenerations: 0,
+          remainingCredits: 0,
+          totalCredits: 0,
+          planName: "Unknown",
           message: "Unable to verify usage status. Please contact support."
         })
       }
@@ -82,8 +85,9 @@ export function Editor() {
         canGenerate: false,
         isAdmin: false,
         isPaid: false,
-        generationCount: 0,
-        remainingGenerations: 0,
+        remainingCredits: 0,
+        totalCredits: 0,
+        planName: "Unknown",
         message: "Unable to verify usage status. Please contact support."
       })
     }
@@ -147,11 +151,15 @@ export function Editor() {
       setGeneratedImages(data.images || [])
       setGeneratedText(data.text || null)
 
-      // 增加使用次数（成功生成后）
-      await fetch("/api/usage", { method: "POST" })
-
-      // 刷新使用次数信息
+      // Credits已在API中扣除，直接刷新使用信息
       await fetchUsageInfo()
+
+      // 如果是测试模式，显示提示
+      if (data.testMode) {
+        setGeneratedText((prev) =>
+          `🧪 Test Mode: ${data.message}\n\n${prev || ''}`
+        )
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate image")
     } finally {
@@ -178,21 +186,32 @@ export function Editor() {
             commands
           </p>
           {user && usageInfo && (
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
-              {usageInfo.isAdmin ? (
-                <>
-                  <Crown className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium">Admin Account - Unlimited Access</span>
-                </>
-              ) : usageInfo.isPaid ? (
-                <>
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Paid Account - Unlimited Generations</span>
-                </>
-              ) : (
-                <span className="text-sm font-medium">
-                  Free Trial: {usageInfo.remainingGenerations} generation{usageInfo.remainingGenerations !== 1 ? 's' : ''} remaining
-                </span>
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
+                {usageInfo.isAdmin ? (
+                  <>
+                    <Crown className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-medium">Admin Account - Unlimited Access</span>
+                  </>
+                ) : usageInfo.isPaid ? (
+                  <>
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      {usageInfo.planName} Plan - {Math.floor(usageInfo.remainingCredits / 2)} images remaining ({usageInfo.remainingCredits} credits)
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm font-medium">
+                    Free Trial: {Math.floor(usageInfo.remainingCredits / 2)} image{Math.floor(usageInfo.remainingCredits / 2) !== 1 ? 's' : ''} remaining ({usageInfo.remainingCredits} credits)
+                  </span>
+                )}
+              </div>
+              {usageInfo.testMode && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-md">
+                  <span className="text-xs font-medium text-amber-900 dark:text-amber-100">
+                    🧪 Test Mode Active - Image generation will be simulated
+                  </span>
+                </div>
               )}
             </div>
           )}
@@ -285,7 +304,7 @@ export function Editor() {
                     Free Trial Exhausted
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-                    You've used your 1 free generation. Upgrade to unlock unlimited AI image editing.
+                    You've used your free trial credits. Upgrade to unlock more AI image editing capabilities.
                   </p>
                   <Button
                     className="w-full"
