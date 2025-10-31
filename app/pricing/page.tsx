@@ -21,12 +21,14 @@ interface PricingTier {
   features: string[]
   popular?: boolean
   cta: string
-  productId: string  // Creem uses product_id, not price_id
-  comingSoon?: boolean  // Mark plans that are not yet available
+  productId: {
+    monthly: string  // Creem product ID for monthly billing
+    yearly: string   // Creem product ID for yearly billing
+  }
 }
 
 // Product IDs from Creem Dashboard
-// Get your product IDs at: https://dashboard.creem.io/products
+// Monthly and yearly product IDs for each plan
 const pricingTiers: PricingTier[] = [
   {
     name: "Basic",
@@ -43,7 +45,10 @@ const pricingTiers: PricingTier[] = [
       "Commercial Use License"
     ],
     cta: "Get Started",
-    productId: process.env.NEXT_PUBLIC_CREEM_PRODUCT_ID || "prod_10uRHGbIe2Q2b3IRYrikDB"  // Active: $12/month plan
+    productId: {
+      monthly: "prod_10uRHGbIe2Q2b3IRYrikDB",  // nanobanana-monthly-basic
+      yearly: "prod_4NdZL18ik8maiq8yVgy52q"    // nanobanana-yearly-basic
+    }
   },
   {
     name: "Pro",
@@ -64,9 +69,11 @@ const pricingTiers: PricingTier[] = [
       "Commercial Use License"
     ],
     popular: true,
-    cta: "Coming Soon",
-    productId: "pro_product_placeholder",  // TODO: Add product ID when ready
-    comingSoon: true
+    cta: "Get Started",
+    productId: {
+      monthly: "prod_1m2Pl2VpkGZddyeffFYO3",   // nanobanana-monthly-pro
+      yearly: "prod_60KBLE5UzUvfZlIRaSkgaF"    // nanobanana-yearly-pro
+    }
   },
   {
     name: "Max",
@@ -86,9 +93,11 @@ const pricingTiers: PricingTier[] = [
       "Professional editing suite",
       "Commercial Use License"
     ],
-    cta: "Coming Soon",
-    productId: "max_product_placeholder",  // TODO: Add product ID when ready
-    comingSoon: true
+    cta: "Get Started",
+    productId: {
+      monthly: "prod_5PmmIkCL1eufxfYRJrs3FE",  // nanobanana-monthly-max
+      yearly: "prod_1ULJTN8Ex2ArxvdCzP12AC"    // nanobanana-yearly-max
+    }
   }
 ]
 
@@ -99,11 +108,6 @@ export default function PricingPage() {
   const supabase = createClient()
 
   const handleSubscribe = async (tier: PricingTier) => {
-    // Prevent interaction with coming soon plans
-    if (tier.comingSoon) {
-      return
-    }
-
     setIsLoading(tier.name)
 
     try {
@@ -116,6 +120,11 @@ export default function PricingPage() {
         return
       }
 
+      // Select the correct product ID based on billing type
+      const selectedProductId = billingType === "monthly"
+        ? tier.productId.monthly
+        : tier.productId.yearly
+
       // Call checkout API
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -123,7 +132,7 @@ export default function PricingPage() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          productId: tier.productId,
+          productId: selectedProductId,
           planName: tier.name,
           billingType,
           email: user.email
@@ -201,20 +210,12 @@ export default function PricingPage() {
                 tier.popular
                   ? "border-primary shadow-lg scale-105"
                   : "border-border"
-              } ${tier.comingSoon ? "opacity-75" : ""}`}
+              }`}
             >
               {tier.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground">
                     Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              {tier.comingSoon && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <Badge variant="secondary">
-                    Coming Soon
                   </Badge>
                 </div>
               )}
@@ -258,7 +259,7 @@ export default function PricingPage() {
                   size="lg"
                   variant={tier.popular ? "default" : "outline"}
                   onClick={() => handleSubscribe(tier)}
-                  disabled={isLoading !== null || tier.comingSoon}
+                  disabled={isLoading !== null}
                 >
                   {isLoading === tier.name ? "Loading..." : tier.cta}
                 </Button>
