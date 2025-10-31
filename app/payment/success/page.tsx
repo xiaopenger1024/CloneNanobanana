@@ -3,6 +3,9 @@ import { PaymentSuccessContent } from "./success-content"
 import { Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 
+// Force dynamic rendering for this page (required for useSearchParams)
+export const dynamic = 'force-dynamic'
+
 function LoadingFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-secondary/20">

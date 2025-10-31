@@ -160,3 +160,63 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+// PUT method to manually update payment status (used by payment success page)
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+
+    // Get current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { is_paid, order_id, checkout_id } = body
+
+    if (typeof is_paid !== 'boolean') {
+      return NextResponse.json({ error: "Invalid is_paid value" }, { status: 400 })
+    }
+
+    const userEmail = user.email
+    if (!userEmail) {
+      return NextResponse.json({ error: "User email not found" }, { status: 400 })
+    }
+
+    // Update or insert user payment status
+    const { error: upsertError } = await supabase
+      .from("user_usage")
+      .upsert(
+        {
+          user_id: user.id,
+          email: userEmail,
+          is_paid: is_paid,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id",
+        }
+      )
+
+    if (upsertError) {
+      console.error("Error updating payment status:", upsertError)
+      return NextResponse.json({ error: "Failed to update payment status" }, { status: 500 })
+    }
+
+    console.log(`Payment status updated for user ${userEmail}: is_paid=${is_paid}, order_id=${order_id}, checkout_id=${checkout_id}`)
+
+    return NextResponse.json({
+      success: true,
+      message: "Payment status updated successfully",
+      is_paid: is_paid,
+    })
+  } catch (error) {
+    console.error("Error updating payment status:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}

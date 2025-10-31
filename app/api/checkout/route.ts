@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
       customer: {
         email: email || user.email,
       },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      // Creem will automatically append: checkout_id, order_id, customer_id, subscription_id
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/payment/success`,
       metadata: {
         user_id: user.id,
         user_email: user.email,

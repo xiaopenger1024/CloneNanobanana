@@ -148,18 +148,41 @@ CREEM_API_KEY=your_test_api_key
 
 测试 API URL: `https://test-api.creem.io/v1/checkouts`
 
-### 2. 测试步骤
+### 2. Creem 支付成功后的返回参数
+
+**重要**: 支付成功后，Creem 会自动重定向到您设置的 `success_url`，并在URL中添加以下查询参数：
+
+- **`checkout_id`** - 结账会话的唯一标识符（例如：`ch_1QyIQDw9cbFWdA1ry5Qc6I`）
+- **`order_id`** - 订单的唯一标识符（例如：`ord_4ucZ7Ts3r7EhSrl5yQE4G6`）
+- **`customer_id`** - 客户的唯一标识符（例如：`cust_2KaCAtu6l3tpjIr8Nr9XOp`）
+- **`subscription_id`** - 订阅的唯一标识符（例如：`sub_ILWMTY6uBim4EB0ux`，仅订阅产品）
+
+**实际重定向URL示例**:
+```
+https://yourwebsite.com/payment/success?checkout_id=ch_xxx&order_id=ord_xxx&customer_id=cust_xxx&subscription_id=sub_xxx
+```
+
+**注意**:
+- 不需要在 `success_url` 中手动添加占位符，Creem 会自动附加这些参数
+- 只需设置基础URL: `/payment/success`
+- Creem 会自动处理参数的添加
+
+### 3. 测试步骤
 
 1. 访问 `/pricing` 页面
 2. 登录账号
 3. 选择一个套餐并点击 "Get Started"
 4. 系统会创建 checkout session 并跳转到 Creem 支付页面
 5. 完成支付（测试环境可使用测试卡号）
-6. 支付成功后跳转到 `/payment/success` 页面
-7. Creem 会发送 webhook 到 `/api/webhooks`
-8. 系统自动更新 `user_usage` 表，设置 `is_paid = true`
+6. **支付成功后**，Creem 会自动重定向到 `/payment/success` 并附带参数：
+   ```
+   /payment/success?checkout_id=ch_xxx&order_id=ord_xxx&customer_id=cust_xxx&subscription_id=sub_xxx
+   ```
+7. 页面显示支付成功信息
+8. Creem 会在后台发送 webhook 到 `/api/webhooks`
+9. 系统自动更新 `user_usage` 表，设置 `is_paid = true`
 
-### 3. 验证支付结果
+### 4. 验证支付结果
 
 在 Supabase Dashboard 中查询 `user_usage` 表：
 

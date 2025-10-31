@@ -5,27 +5,73 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, Loader2, Crown, Sparkles } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const supabase = createClient()
 
   // Get all parameters from Creem
-  const sessionId = searchParams.get("session_id")
+  // After successful payment, Creem redirects with: checkout_id, order_id, customer_id, subscription_id
   const checkoutId = searchParams.get("checkout_id")
   const orderId = searchParams.get("order_id")
   const customerId = searchParams.get("customer_id")
-  const productId = searchParams.get("product_id")
+  const subscriptionId = searchParams.get("subscription_id")
 
   useEffect(() => {
-    // Simulate processing delay
-    const timer = setTimeout(() => {
+    // Verify we have a valid payment confirmation
+    // Creem always provides checkout_id and order_id on success
+    if (!checkoutId && !orderId) {
+      setError("Invalid payment confirmation. Please contact support if you completed a payment.")
       setLoading(false)
-    }, 2000)
+      return
+    }
 
-    return () => clearTimeout(timer)
-  }, [])
+    // Verify user is logged in and update payment status
+    const verifyPayment = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          setError("Please sign in to verify your payment.")
+          setLoading(false)
+          return
+        }
+
+        // Update user payment status (mark as paid)
+        const response = await fetch('/api/usage', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            is_paid: true,
+            order_id: orderId,
+            checkout_id: checkoutId,
+            customer_id: customerId,
+            subscription_id: subscriptionId,
+          }),
+        })
+
+        if (!response.ok) {
+          console.error("Failed to update payment status:", await response.text())
+        }
+
+        // Wait a bit to show processing animation
+        setTimeout(() => {
+          setLoading(false)
+        }, 2000)
+      } catch (err) {
+        console.error("Payment verification error:", err)
+        setLoading(false)
+      }
+    }
+
+    verifyPayment()
+  }, [checkoutId, orderId, supabase.auth])
 
   if (loading) {
     return (
@@ -40,6 +86,39 @@ export function PaymentSuccessContent() {
               </p>
             </div>
           </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-secondary/20 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <div className="text-6xl mb-4 opacity-20">⚠️</div>
+            </div>
+            <CardTitle className="text-2xl mb-2">Payment Verification Issue</CardTitle>
+            <CardDescription className="text-base">
+              {error}
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex flex-col gap-3">
+            <Button
+              className="w-full"
+              onClick={() => router.push("/")}
+            >
+              Return to Home
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push("/pricing")}
+            >
+              View Pricing
+            </Button>
+          </CardFooter>
         </Card>
       </div>
     )
