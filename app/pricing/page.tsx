@@ -46,8 +46,8 @@ const pricingTiers: PricingTier[] = [
     ],
     cta: "Get Started",
     productId: {
-      monthly: "prod_10uRHGbIe2Q2b3IRYrikDB",  // nanobanana-monthly-basic
-      yearly: "prod_4NdZL18ik8maiq8yVgy52q"    // nanobanana-yearly-basic
+      monthly: "prod_2dNdTAeN9qcr1jpCwZ8P2S",  // nanobanana-monthly-basic (production)
+      yearly: "prod_70x2vwnZI4o1hZGsGetp14"    // nanobanana-yearly-basic (production)
     }
   },
   {
@@ -71,8 +71,8 @@ const pricingTiers: PricingTier[] = [
     popular: true,
     cta: "Get Started",
     productId: {
-      monthly: "prod_1m2Pl2VpkGZddyeffFYO3",   // nanobanana-monthly-pro
-      yearly: "prod_60KBLE5UzUvfZlIRaSkgaF"    // nanobanana-yearly-pro
+      monthly: "prod_qVddA8khkJhk25D9xEHZy",   // nanobanana-monthly-pro (production)
+      yearly: "prod_6EIdE6oYZkT3nK0Ks6UoWk"    // nanobanana-yearly-pro (production)
     }
   },
   {
@@ -95,8 +95,8 @@ const pricingTiers: PricingTier[] = [
     ],
     cta: "Get Started",
     productId: {
-      monthly: "prod_5PmmIkCL1eufxfYRJrs3FE",  // nanobanana-monthly-max
-      yearly: "prod_1ULJTN8Ex2ArxvdCzP12AC"    // nanobanana-yearly-max
+      monthly: "prod_6hXCFYnF5roebUXfrwMngg",  // nanobanana-monthly-max (production)
+      yearly: "prod_5cFpK6Q4S8ntGUEYBQe6sA"    // nanobanana-yearly-max (production)
     }
   }
 ]

@@ -59,16 +59,13 @@ CREEM_PRODUCT_ID=你的_creem_产品_id
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-详细的 Supabase 配置说明请参考 [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)。
-详细的 Creem 支付配置请参考 [CREEM_SETUP.md](./CREEM_SETUP.md)。
+详细的 Supabase OAuth 和数据库配置请联系开发团队。
 
 4. 配置数据库：
-```bash
-# 在 Supabase Dashboard 中执行 DATABASE_SETUP.md 中的 SQL 脚本
-# 这将创建 user_usage 表和相关的 RLS 策略
-```
 
-详细的数据库配置说明请参考 [DATABASE_SETUP.md](./DATABASE_SETUP.md)。
+在 Supabase Dashboard → SQL Editor 中执行数据库初始化脚本。
+
+数据库表结构和 SQL 脚本请联系开发团队获取。
 
 5. 启动开发服务器：
 ```bash
@@ -147,7 +144,7 @@ pnpm dev
 - **受保护路由**: AI 图片生成功能需要身份认证
 - **UI 设计**: 下拉菜单选择登录方式
 
-配置说明请参考 [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)。
+配置说明请联系开发团队。
 
 ### 使用限制系统
 
@@ -178,7 +175,7 @@ FROM user_usage
 ORDER BY created_at DESC;
 ```
 
-详细说明请参考 [USAGE_LIMITS.md](./USAGE_LIMITS.md)。
+详细说明请联系开发团队。
 
 ### Creem 支付系统
 
@@ -192,13 +189,11 @@ ORDER BY created_at DESC;
 #### 配置 Creem 支付
 
 1. 在 [Creem Dashboard](https://creem.io) 创建账号
-2. 获取 API Key 和 Product ID
-3. 配置环境变量（详见 [CREEM_SETUP.md](./CREEM_SETUP.md)）
-4. 设置 Webhook URL: `https://yourdomain.com/api/webhooks`
+2. 获取 API Key 和配置产品
+3. 设置环境变量和 Webhook
+4. 详细配置步骤请联系开发团队
 
 支付成功后，系统会自动将用户标记为付费用户（`is_paid = true`）。
-
-详细配置说明请参考 [CREEM_SETUP.md](./CREEM_SETUP.md)。
 
 ## 部署
 
@@ -227,7 +222,7 @@ pnpm start
 
 对于 Vercel 部署，只需连接您的仓库，平台会自动检测 Next.js 配置。
 
-详细的部署故障排除请参考 [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)。
+## 开发文档
 
 ## 重要说明
 
@@ -238,13 +233,19 @@ pnpm start
 - **TypeScript**: 生产环境中忽略构建错误（`ignoreBuildErrors: true`）
 - **图片**: 未优化以降低构建复杂度
 
-## 相关文档
+## 开发文档
 
-- [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Supabase OAuth 配置详细说明
-- [DATABASE_SETUP.md](./DATABASE_SETUP.md) - 数据库表结构和 SQL 脚本
-- [USAGE_LIMITS.md](./USAGE_LIMITS.md) - 使用限制功能详细说明
-- [CREEM_SETUP.md](./CREEM_SETUP.md) - Creem 支付集成配置指南
-- [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) - Vercel 部署故障排除指南
+本项目的详细开发文档和配置指南仅在本地开发环境中提供，包括：
+
+- Supabase OAuth 详细配置步骤
+- 数据库表结构和完整 SQL 脚本
+- Creem 支付集成完整指南
+- Webhook 配置和测试方法
+- 生产环境部署配置
+- 积分系统使用指南
+- 常见问题故障排除
+
+**如需获取开发文档，请联系项目维护者。**
 
 ## 许可证
 

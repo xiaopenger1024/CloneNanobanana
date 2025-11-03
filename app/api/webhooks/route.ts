@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { createHmac } from "crypto"
 
 // Create Supabase admin client for webhook handler
 const supabaseAdmin = createClient(
@@ -14,9 +15,41 @@ const PLAN_CREDITS = {
   Max: 55200,    // 27,600 images
 }
 
+// Verify Creem webhook signature
+function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+  if (!secret) {
+    console.warn("⚠️ CREEM_WEBHOOK_SECRET not configured - skipping signature verification")
+    return true
+  }
+
+  try {
+    const expectedSignature = createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex')
+
+    return signature === expectedSignature || signature === `sha256=${expectedSignature}`
+  } catch (error) {
+    console.error("Error verifying webhook signature:", error)
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Get raw body for signature verification
+    const rawBody = await request.text()
+    const signature = request.headers.get('x-creem-signature') || request.headers.get('creem-signature') || ''
+    const webhookSecret = process.env.CREEM_WEBHOOK_SECRET || ''
+
+    // Verify webhook signature
+    if (webhookSecret && !verifyWebhookSignature(rawBody, signature, webhookSecret)) {
+      console.error("❌ Invalid webhook signature")
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
+
+    console.log("✅ Webhook signature verified")
+
+    const body = JSON.parse(rawBody)
     const eventType = body.type || body.event_type
 
     console.log("Webhook received:", eventType, body)

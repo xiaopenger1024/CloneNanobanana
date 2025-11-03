@@ -29,5 +29,6 @@ next-env.d.ts
 # Claude Code configuration (local only)
 CLAUDE.md
 
-# Troubleshooting archive (local debugging documents)
-docs/troubleshooting-archive/
+# Documentation and guides (development references, not for production)
+# All documentation files are kept locally and not uploaded to Git
+docs/
