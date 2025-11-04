@@ -58,8 +58,6 @@ const pricingTiers: PricingTier[] = [
     credits: 9600,
     features: [
       "400 high-quality images/month",
-      "Support Seedream-4 Model",
-      "Support Nanobanana-Pro Model",
       "All style templates included",
       "Priority generation queue",
       "Priority customer support",
@@ -83,8 +81,6 @@ const pricingTiers: PricingTier[] = [
     credits: 55200,
     features: [
       "2300 high-quality images/month",
-      "Support Seedream-4 Model",
-      "Support Nanobanana-Pro Model",
       "All style templates included",
       "Fastest generation speed",
       "Dedicated account manager",
@@ -306,11 +302,11 @@ export default function PricingPage() {
 
           <div className="text-center mt-12">
             <p className="text-muted-foreground mb-4">
-              Have more questions? We're here to help
+              Have more questions? Email us at{' '}
+              <a href="mailto:nanobanana@xiaopeng.space" className="text-primary hover:underline">
+                nanobanana@xiaopeng.space
+              </a>
             </p>
-            <Button variant="outline" size="lg">
-              Contact Support
-            </Button>
           </div>
         </div>
 

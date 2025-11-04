@@ -4,12 +4,12 @@ const faqs = [
   {
     question: "What is Nano Banana?",
     answer:
-      "Nano Banana is an advanced AI-powered image editing platform that allows you to transform images using simple text prompts. Our model delivers consistent character editing and scene preservation that surpasses other AI editors.",
+      "Nano Banana is a user-friendly platform that provides a custom interface for Google's Gemini 2.5 Flash Image model. We enhance the base AI capabilities with features like credit management, usage tracking, batch processing, and optimized workflows. We are an independent service and not affiliated with Google or the model providers.",
   },
   {
     question: "How does the AI image editing work?",
     answer:
-      "Simply upload your image and describe the changes you want in natural language. Our AI model understands context, maintains character consistency, and preserves scene integrity while making your requested edits.",
+      "Simply upload your image and describe the changes you want in natural language. The AI technology understands context, maintains character consistency, and preserves scene integrity while making your requested edits.",
   },
   {
     question: "What file formats are supported?",
@@ -29,12 +29,12 @@ const faqs = [
   {
     question: "Is there a free trial available?",
     answer:
-      "Yes! New users get free credits to try out all features. You can upgrade to a paid plan anytime for unlimited access.",
+      "Yes! New users get 2 free credits (1 image generation) to try out the platform. You can upgrade to a paid plan anytime for more credits.",
   },
   {
     question: "What makes Nano Banana different from other AI editors?",
     answer:
-      "Our advanced model excels at character consistency and scene preservation. We also offer natural language processing, batch editing, and faster processing times compared to competitors.",
+      "We provide an intuitive, user-friendly interface with additional features like credit-based usage tracking, subscription management, and optimized workflows. Our platform is designed to make AI image editing accessible and efficient.",
   },
   {
     question: "Can I use edited images commercially?",

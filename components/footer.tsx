@@ -58,7 +58,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">
+                <a href="/support" className="hover:text-foreground transition-colors">
                   Support
                 </a>
               </li>
@@ -95,7 +95,10 @@ export function Footer() {
         <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">© 2025 Nano Banana. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">
+            <a href="/refund-policy" className="hover:text-foreground transition-colors">
+              Refund Policy
+            </a>
+            <a href="/privacy-policy" className="hover:text-foreground transition-colors">
               Privacy Policy
             </a>
             <a href="#" className="hover:text-foreground transition-colors">
@@ -105,6 +108,16 @@ export function Footer() {
               Cookie Policy
             </a>
           </div>
+        </div>
+
+        {/* Global Disclaimer - Creem Compliance */}
+        <div className="mt-6 pt-6 border-t border-border/40">
+          <p className="text-center text-xs text-muted-foreground leading-relaxed max-w-4xl mx-auto">
+            Nano Banana is an independent product and is not affiliated with, endorsed by, or sponsored by
+            Google, Gemini, or any AI model providers. We provide a custom user interface and additional
+            features built on top of AI models to enhance usability and provide value-added services.
+            All AI model brand names and trademarks are the property of their respective owners.
+          </p>
         </div>
       </div>
     </footer>

@@ -22,10 +22,13 @@ export function Hero() {
 
       <div className="container relative">
         <div className="mx-auto max-w-4xl text-center">
-          <Badge variant="secondary" className="mb-6 bg-primary/10 text-primary border-primary/20">
+          <Badge variant="secondary" className="mb-2 bg-primary/10 text-primary border-primary/20">
             <span className="mr-1">🍌</span>
-            The AI model that outperforms Flux Kontext
+            Powered by Google Gemini 2.5 Flash Image
           </Badge>
+          <p className="text-xs text-muted-foreground mb-6 italic">
+            * Independent product, not affiliated with Google or mentioned brands
+          </p>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-balance mb-6">
             <span className="bg-gradient-to-r from-primary via-yellow-500 to-primary bg-clip-text text-transparent">
@@ -34,8 +37,9 @@ export function Hero() {
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground text-balance mb-8 max-w-2xl mx-auto leading-relaxed">
-            Transform any image with simple text prompts. Nano-banana's advanced model delivers consistent character
-            editing and scene preservation that surpasses Flux Kontext. Experience the future of AI image editing.
+            Transform any image with simple text prompts. Powered by advanced AI technology,
+            our platform delivers consistent character editing and scene preservation.
+            Experience an intuitive interface for professional AI image editing.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">

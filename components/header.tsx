@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
-import { LogOut, Github, LogIn } from "lucide-react"
+import { LogOut, Github, LogIn, Settings, User as UserIcon } from "lucide-react"
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null)
@@ -100,10 +100,10 @@ export function Header() {
             Pricing
           </a>
           <a
-            href="/#testimonials"
+            href="/#social-proof"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Reviews
+            Use Cases
           </a>
           <a href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             FAQ
@@ -112,15 +112,27 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           {user ? (
-            <>
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {user.user_metadata.user_name || user.user_metadata.full_name || user.email}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleLogout} disabled={isLoading}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={isLoading}>
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">
+                    {user.user_metadata.user_name || user.user_metadata.full_name || user.email}
+                  </span>
+                  <span className="sm:hidden">Account</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => window.location.href = "/account"}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Account Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

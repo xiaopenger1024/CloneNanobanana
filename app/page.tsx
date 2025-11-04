@@ -3,7 +3,7 @@ import { Hero } from "@/components/hero"
 import { Features } from "@/components/features"
 import { Editor } from "@/components/editor"
 import { Showcase } from "@/components/showcase"
-import { Testimonials } from "@/components/testimonials"
+import { SocialProof } from "@/components/social-proof"
 import { FAQ } from "@/components/faq"
 import { Footer } from "@/components/footer"
 
@@ -15,7 +15,7 @@ export default function Home() {
       <Features />
       <Editor />
       <Showcase />
-      <Testimonials />
+      <SocialProof />
       <FAQ />
       <Footer />
     </main>
