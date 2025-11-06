@@ -34,7 +34,7 @@ const pricingTiers: PricingTier[] = [
     name: "Basic",
     description: "Perfect for individuals and light users",
     monthlyPrice: 12,
-    yearlyPrice: 144,
+    yearlyPrice: 115.20,
     credits: 1800,
     features: [
       "75 high-quality images/month",
@@ -54,7 +54,7 @@ const pricingTiers: PricingTier[] = [
     name: "Pro",
     description: "For professional creators and teams",
     monthlyPrice: 19.5,
-    yearlyPrice: 234,
+    yearlyPrice: 187.20,
     credits: 9600,
     features: [
       "400 high-quality images/month",
@@ -77,7 +77,7 @@ const pricingTiers: PricingTier[] = [
     name: "Max",
     description: "Designed for large enterprises and professional studios",
     monthlyPrice: 80,
-    yearlyPrice: 960,
+    yearlyPrice: 768,
     credits: 55200,
     features: [
       "2300 high-quality images/month",
@@ -235,7 +235,10 @@ export default function PricingPage() {
                     </div>
                   )}
                   <div className="text-sm text-muted-foreground mt-2">
-                    {tier.credits} credits/year
+                    {billingType === "monthly"
+                      ? `${(tier.credits / 12).toFixed(0)} credits/month`
+                      : `${tier.credits} credits/year`
+                    }
                   </div>
                 </div>
 
