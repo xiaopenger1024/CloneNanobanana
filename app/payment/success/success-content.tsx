@@ -30,7 +30,8 @@ export function PaymentSuccessContent() {
       return
     }
 
-    // Verify user is logged in and update payment status
+    // Verify user is logged in
+    // Note: Payment processing is handled by webhook, we just verify the user
     const verifyPayment = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -41,24 +42,11 @@ export function PaymentSuccessContent() {
           return
         }
 
-        // Update user payment status (mark as paid)
-        const response = await fetch('/api/usage', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            is_paid: true,
-            order_id: orderId,
-            checkout_id: checkoutId,
-            customer_id: customerId,
-            subscription_id: subscriptionId,
-          }),
-        })
+        console.log("Payment success page loaded for user:", user.email)
+        console.log("Order details:", { orderId, checkoutId, customerId, subscriptionId })
 
-        if (!response.ok) {
-          console.error("Failed to update payment status:", await response.text())
-        }
+        // Payment status and credits are updated by webhook automatically
+        // We just show the success message to the user
 
         // Wait a bit to show processing animation
         setTimeout(() => {
