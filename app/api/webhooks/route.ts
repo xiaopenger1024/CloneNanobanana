@@ -84,6 +84,11 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutCompleted(body: any) {
+  // 增强的日志：打印完整的webhook payload
+  console.log("=== FULL WEBHOOK PAYLOAD ===")
+  console.log(JSON.stringify(body, null, 2))
+  console.log("============================")
+
   const metadata = body.data?.metadata || body.metadata
   const data = body.data || body
 
@@ -98,13 +103,20 @@ async function handleCheckoutCompleted(body: any) {
   const customerId = data?.customer_id
   const subscriptionId = data?.subscription_id
 
+  console.log("=== EXTRACTED DATA ===")
   console.log("Checkout completed:", {
     userId, userEmail, planName, billingType, status,
     orderId, customerId, subscriptionId
   })
+  console.log("Metadata available:", !!metadata)
+  console.log("Metadata content:", JSON.stringify(metadata, null, 2))
+  console.log("=====================")
 
   if (!userId || !userEmail) {
-    console.error("Missing user information in webhook metadata")
+    console.error("❌ Missing user information in webhook metadata")
+    console.error("Available keys in body:", Object.keys(body))
+    console.error("Available keys in body.data:", Object.keys(body.data || {}))
+    console.error("Available keys in metadata:", Object.keys(metadata || {}))
     return
   }
 
