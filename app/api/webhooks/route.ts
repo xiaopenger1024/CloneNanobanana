@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
     console.log("✅ Webhook signature verified")
 
     const body = JSON.parse(rawBody)
-    const eventType = body.type || body.event_type
+    // Creem uses 'eventType' (camelCase), not 'type' or 'event_type'
+    const eventType = body.type || body.event_type || body.eventType
 
     console.log("Webhook received:", eventType, body)
 
@@ -89,8 +90,9 @@ async function handleCheckoutCompleted(body: any) {
   console.log(JSON.stringify(body, null, 2))
   console.log("============================")
 
-  const metadata = body.data?.metadata || body.metadata
-  const data = body.data || body
+  // Creem's actual payload structure: body.object contains the checkout data
+  const metadata = body.object?.metadata || body.data?.metadata || body.metadata
+  const data = body.object || body.data || body
 
   const userId = metadata?.user_id
   const userEmail = metadata?.user_email
@@ -98,10 +100,10 @@ async function handleCheckoutCompleted(body: any) {
   const billingType = metadata?.billing_type || 'monthly'
   const status = data?.status || body.status
 
-  // Extract Creem IDs
-  const orderId = data?.order_id || data?.id
-  const customerId = data?.customer_id
-  const subscriptionId = data?.subscription_id
+  // Extract Creem IDs from the order object
+  const orderId = data?.order?.id || data?.order_id || data?.id
+  const customerId = data?.customer?.id || data?.customer_id
+  const subscriptionId = data?.subscription?.id || data?.subscription_id
 
   console.log("=== EXTRACTED DATA ===")
   console.log("Checkout completed:", {
@@ -149,18 +151,19 @@ async function handleCheckoutCompleted(body: any) {
 }
 
 async function handleSubscriptionActive(body: any) {
-  const metadata = body.data?.metadata || body.metadata
-  const data = body.data || body
+  // Creem's actual payload structure: body.object contains the subscription data
+  const metadata = body.object?.metadata || body.data?.metadata || body.metadata
+  const data = body.object || body.data || body
 
   const userId = metadata?.user_id
   const userEmail = metadata?.user_email
   const planName = metadata?.plan_name || 'Basic'
   const billingType = metadata?.billing_type || 'monthly'
 
-  // Extract Creem IDs
-  const subscriptionId = data?.subscription_id || data?.id
-  const customerId = data?.customer_id
-  const orderId = data?.order_id
+  // Extract Creem IDs from the subscription/order object
+  const subscriptionId = data?.subscription?.id || data?.subscription_id || data?.id
+  const customerId = data?.customer?.id || data?.customer_id
+  const orderId = data?.order?.id || data?.order_id
 
   console.log("Subscription active:", {
     userId, userEmail, planName, billingType,
@@ -195,7 +198,8 @@ async function handleSubscriptionActive(body: any) {
 }
 
 async function handleSubscriptionCanceled(body: any) {
-  const metadata = body.data?.metadata || body.metadata
+  // Creem's actual payload structure: body.object contains the subscription data
+  const metadata = body.object?.metadata || body.data?.metadata || body.metadata
   const userId = metadata?.user_id
   const userEmail = metadata?.user_email
 
