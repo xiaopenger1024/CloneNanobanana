@@ -8,11 +8,21 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Credits allocation based on plan
+// Credits allocation based on plan and billing type
+// 2 credits = 1 image
 const PLAN_CREDITS = {
-  Basic: 1800,   // 900 images (2 credits = 1 image)
-  Pro: 9600,     // 4,800 images
-  Max: 55200,    // 27,600 images
+  Basic: {
+    monthly: 150,    // 75 images/month
+    yearly: 1800,    // 900 images/year (75 * 12)
+  },
+  Pro: {
+    monthly: 800,    // 400 images/month
+    yearly: 9600,    // 4,800 images/year (400 * 12)
+  },
+  Max: {
+    monthly: 4600,   // 2,300 images/month
+    yearly: 55200,   // 27,600 images/year (2,300 * 12)
+  },
 }
 
 // Verify Creem webhook signature
@@ -128,8 +138,11 @@ async function handleCheckoutCompleted(body: any) {
     return
   }
 
-  // Get credits amount for the plan
-  const totalCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+  // Get credits amount for the plan and billing type
+  const planCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+  const totalCredits = billingType === 'yearly' ? planCredits.yearly : planCredits.monthly
+
+  console.log(`💳 Allocating credits: ${planName} ${billingType} = ${totalCredits} credits (${totalCredits / 2} images)`)
 
   // Call allocate_credits function to update user with credits
   const { error } = await supabaseAdmin.rpc('allocate_credits', {
@@ -175,8 +188,11 @@ async function handleSubscriptionActive(body: any) {
     return
   }
 
-  // Get credits amount for the plan
-  const totalCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+  // Get credits amount for the plan and billing type
+  const planCredits = PLAN_CREDITS[planName as keyof typeof PLAN_CREDITS] || PLAN_CREDITS.Basic
+  const totalCredits = billingType === 'yearly' ? planCredits.yearly : planCredits.monthly
+
+  console.log(`💳 Allocating credits: ${planName} ${billingType} = ${totalCredits} credits (${totalCredits / 2} images)`)
 
   // Call allocate_credits function
   const { error } = await supabaseAdmin.rpc('allocate_credits', {
